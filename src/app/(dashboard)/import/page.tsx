@@ -52,13 +52,19 @@ export default function ImportPage() {
         return;
       }
       // Show a preview of what we can extract
-      const previewCourses: NormalizedCourse[] = courses.map((c: Record<string, unknown>) => ({
-        code: (c.code ?? c.courseId ?? "?") as string,
-        name: (c.name ?? c.title ?? "?") as string,
-        credits: (c.credits ?? c.credit ?? 0) as number,
-        semester: (c.semester ?? c.term ?? 0) as number,
-        grade: (c.grade ?? c.result ?? undefined) as string | undefined,
-      }));
+      const previewCourses: NormalizedCourse[] = courses.map((c: Record<string, unknown>) => {
+        const grade = c.grade ?? c.result;
+        return {
+          code: (c.code ?? c.courseId ?? "?") as string,
+          name: (c.name ?? c.title ?? "?") as string,
+          credits: (c.credits ?? c.credit ?? 0) as number,
+          semester: (c.semester ?? c.term ?? 0) as number,
+          grade:
+            typeof grade === "string" || typeof grade === "number"
+              ? String(grade)
+              : undefined,
+        };
+      });
       setPreview(previewCourses);
       setParseError("");
     } catch {
@@ -106,7 +112,7 @@ export default function ImportPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center gap-3">
-        <Upload className="h-6 w-6 text-indigo-600" />
+        <Upload className="h-6 w-6 text-blue-600" />
         <h2 className="text-xl font-bold text-slate-900">导入教务数据</h2>
       </div>
 
@@ -121,14 +127,14 @@ export default function ImportPage() {
           <div
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
-            className="rounded-xl border-2 border-dashed border-slate-300 bg-white p-8 text-center transition hover:border-indigo-400 hover:bg-indigo-50/50"
+            className="rounded-xl border-2 border-dashed border-slate-300 bg-white p-8 text-center transition hover:border-blue-400 hover:bg-blue-50/50"
           >
             <FileJson className="mx-auto mb-3 h-10 w-10 text-slate-300" />
             <p className="text-sm font-medium text-slate-600">
               拖拽 JSON 文件到这里
             </p>
             <p className="mt-1 text-xs text-slate-400">或</p>
-            <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-indigo-500">
+            <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-blue-500">
               <Upload className="h-4 w-4" />
               选择文件
               <input
@@ -151,7 +157,7 @@ export default function ImportPage() {
               onChange={handlePaste}
               placeholder='{"major":"材料科学与工程","year":2025,"courses":[...]}'
               rows={8}
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 font-mono text-xs text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 font-mono text-xs text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -188,7 +194,7 @@ export default function ImportPage() {
                   <tbody className="divide-y divide-slate-100">
                     {preview.map((c, i) => (
                       <tr key={i}>
-                        <td className="px-4 py-2 font-mono text-xs text-indigo-600">{c.code}</td>
+                        <td className="course-code px-4 py-2 text-blue-600">{c.code}</td>
                         <td className="px-4 py-2 text-slate-700">{c.name}</td>
                         <td className="px-4 py-2 text-slate-500">{c.credits}</td>
                         <td className="px-4 py-2 text-slate-500">第{c.semester}学期</td>
@@ -202,7 +208,7 @@ export default function ImportPage() {
                 <button
                   onClick={handleImport}
                   disabled={importing}
-                  className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow transition hover:bg-indigo-500 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow transition hover:bg-blue-500 disabled:opacity-50"
                 >
                   {importing ? "导入中..." : "确认导入"}
                   <ArrowRight className="h-4 w-4" />
@@ -249,7 +255,7 @@ export default function ImportPage() {
                 <tbody className="divide-y divide-slate-100">
                   {result.courses.map((c, i) => (
                     <tr key={i}>
-                      <td className="px-4 py-2 font-mono text-xs text-indigo-600">{c.code}</td>
+                      <td className="course-code px-4 py-2 text-blue-600">{c.code}</td>
                       <td className="px-4 py-2 text-slate-700">{c.name}</td>
                       <td className="px-4 py-2 text-slate-500">{c.credits}</td>
                       <td className="px-4 py-2 text-slate-500">第{c.semester}学期</td>
@@ -263,7 +269,7 @@ export default function ImportPage() {
           <div className="mt-4 flex gap-3">
             <button
               onClick={() => router.push("/")}
-              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow transition hover:bg-indigo-500"
+              className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow transition hover:bg-blue-500"
             >
               查看学习路径
               <ArrowRight className="h-4 w-4" />

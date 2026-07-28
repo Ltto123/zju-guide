@@ -1,10 +1,366 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "OPPO Sans";
+  src: url("/fonts/oppo-sans-4.0.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Novecento Wide";
+  src: url("/fonts/novecento-wide-normal.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 @theme {
-  --color-primary: #4f46e5;
-  --color-primary-light: #6366f1;
+  --color-primary: #005fa8;
+  --color-primary-light: #147eb8;
+  --color-blue-50: #eff7fc;
+  --color-blue-100: #dbeef8;
+  --color-blue-200: #b9ddf1;
+  --color-blue-300: #82c3e5;
+  --color-blue-400: #3e9ed0;
+  --color-blue-500: #147eb8;
+  --color-blue-600: #005fa8;
+  --color-blue-700: #003f88;
+  --color-blue-800: #07366c;
+  --color-blue-900: #0b2e57;
+  --color-blue-950: #071c35;
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
-  --color-info: #3b82f6;
+  --color-info: #147eb8;
+}
+
+:root {
+  --app-canvas: #f1f3f6;
+  --app-surface: #ffffff;
+  --app-surface-subtle: #f8f9fb;
+  --app-border: #dfe3e8;
+  --app-ink: #172033;
+  --app-muted: #667085;
+  --app-primary: #005fa8;
+  --app-primary-strong: #003f88;
+  --app-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.035);
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #c5cad3 transparent;
+}
+
+html {
+  background: var(--app-canvas);
+}
+
+body {
+  background: var(--app-canvas);
+  color: var(--app-ink);
+  font-family: "OPPO Sans", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--app-primary) 72%, white);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.app-loading,
+.app-shell,
+.app-main {
+  background: var(--app-canvas);
+}
+
+.app-sidebar {
+  border-right: 1px solid var(--app-border);
+  background: color-mix(in oklch, var(--app-surface) 96%, var(--app-canvas));
+  box-shadow: 8px 0 28px rgb(15 23 42 / 0.025);
+}
+
+.app-brand {
+  border-bottom: 1px solid var(--app-border);
+}
+
+.app-brand-mark {
+  flex: 0 0 auto;
+}
+
+.app-brand-title {
+  font-family: "OPPO Sans", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+}
+
+.course-code {
+  font-family: "Novecento Wide", "Arial Wide", "Arial", sans-serif;
+  font-size: max(1em, 0.8125rem);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.055em;
+}
+
+.app-nav-link {
+  position: relative;
+  overflow: hidden;
+  border-radius: 5px;
+  color: #596274;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.app-nav-link > * {
+  position: relative;
+  z-index: 1;
+}
+
+.app-nav-link::before {
+  position: absolute;
+  z-index: 2;
+  top: 6px;
+  bottom: 6px;
+  left: 0;
+  width: 4px;
+  background: transparent;
+  content: "";
+}
+
+.app-nav-link::after {
+  position: absolute;
+  inset: 0;
+  background-image: url("/nav-watermark.svg");
+  background-position: center right;
+  background-size: cover;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+}
+
+.app-nav-link:hover {
+  background: #f0f2f5;
+  color: #263043;
+}
+
+.app-nav-link.is-active {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgb(0 95 168 / 0.12), 0 4px 14px rgb(15 23 42 / 0.045);
+  color: #20283a;
+}
+
+.app-nav-link.is-active::before {
+  background: var(--app-primary);
+}
+
+.app-nav-link.is-active::after {
+  opacity: 1;
+}
+
+.app-topbar {
+  border-bottom: 1px solid var(--app-border);
+  background: rgb(255 255 255 / 0.88);
+  backdrop-filter: blur(14px) saturate(135%);
+}
+
+.app-icon-button,
+.app-user-button {
+  border-radius: 6px;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.app-icon-button:hover,
+.app-user-button:hover {
+  background: #f0f2f5;
+  color: #263043;
+}
+
+.app-user-menu {
+  border-radius: 7px;
+  box-shadow: 0 16px 38px rgb(15 23 42 / 0.13);
+}
+
+.app-content {
+  min-height: calc(100vh - 64px);
+}
+
+.app-content :where(input, textarea, select) {
+  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.app-content .rounded-xl.border.bg-white {
+  border-color: var(--app-border);
+  border-radius: 8px;
+  box-shadow: var(--app-shadow);
+}
+
+.app-content .rounded-lg.border.bg-white {
+  border-color: var(--app-border);
+  border-radius: 6px;
+}
+
+.credit-overview,
+.course-toolbar,
+.course-group {
+  border-radius: 8px;
+  box-shadow: var(--app-shadow);
+}
+
+.credit-category-grid {
+  border-radius: 5px;
+}
+
+.credit-category:hover {
+  background: #f8f9fb;
+}
+
+.credit-category.is-active {
+  position: relative;
+  background: #eff7fc;
+  color: var(--app-primary-strong);
+  box-shadow: inset 0 -3px 0 var(--app-primary);
+}
+
+.course-toolbar {
+  position: sticky;
+  top: 76px;
+  z-index: 10;
+}
+
+.course-search::placeholder {
+  color: #98a2b3;
+}
+
+.view-switch,
+.view-switch button {
+  border-radius: 4px;
+}
+
+.view-switch button {
+  position: relative;
+  overflow: hidden;
+}
+
+.view-switch button > span {
+  position: relative;
+  z-index: 1;
+}
+
+.view-switch button.is-active,
+.geometry-button {
+  background-color: var(--app-primary);
+  background-image: url("/button-geometry.svg");
+  background-position: center right;
+  background-size: cover;
+  color: #ffffff;
+}
+
+.geometry-button {
+  border-radius: 4px;
+}
+
+.course-group {
+  overflow: visible;
+  background-color: #ffffff;
+  background-image: url("/paper-dot-texture.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-origin: border-box;
+  background-clip: border-box;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), var(--app-shadow);
+}
+
+.course-group > span {
+  border-radius: 2px;
+}
+
+.course-card {
+  border-color: #d7dde4;
+  border-radius: 6px;
+  background-color: #ffffff;
+  background-image: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.82), 0 2px 8px rgb(15 23 42 / 0.035);
+}
+
+.course-card:hover {
+  border-color: #82b9d7;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 7px 18px rgb(0 63 136 / 0.09);
+  transform: translateY(-1px);
+}
+
+.course-card.is-passed {
+  background: color-mix(in oklch, white 94%, #dcfce7);
+}
+
+.course-check {
+  border-radius: 4px;
+}
+
+.program-selector {
+  border: 1px solid #d5e1e9;
+  background: rgb(242 246 249 / 0.82);
+  background-image: url("/frost-texture.svg");
+  backdrop-filter: blur(14px) saturate(82%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.88);
+}
+
+@media (max-width: 1023px) {
+  .app-sidebar {
+    box-shadow: 18px 0 48px rgb(15 23 42 / 0.16);
+  }
+
+  .course-toolbar {
+    top: 72px;
+  }
+}
+
+@media (max-width: 639px) {
+  .app-content {
+    padding-top: 16px;
+  }
+
+  .course-toolbar {
+    align-items: stretch;
+  }
+
+  .view-switch {
+    width: 100%;
+  }
+
+  .view-switch button {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

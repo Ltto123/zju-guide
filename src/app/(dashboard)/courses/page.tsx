@@ -22,7 +22,7 @@ export default function CoursesPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center gap-3">
-        <BookOpen className="h-6 w-6 text-indigo-600" />
+        <BookOpen className="h-6 w-6 text-blue-600" />
         <h2 className="text-xl font-bold text-slate-900">课程库</h2>
       </div>
 
@@ -33,7 +33,7 @@ export default function CoursesPage() {
           placeholder="搜索课程名称或课号..."
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
 
@@ -56,9 +56,9 @@ export default function CoursesPage() {
               <tbody className="divide-y divide-slate-100">
                 {data.data.map((course) => (
                   <tr key={course.code} className="transition hover:bg-slate-50">
-                    <td className="px-4 py-3 font-mono text-xs text-indigo-600">{course.code}</td>
+                    <td className="course-code px-4 py-3 text-blue-600">{course.code}</td>
                     <td className="px-4 py-3">
-                      <Link href={`/course/${course.code}`} className="font-medium text-slate-900 hover:text-indigo-600">
+                      <Link href={`/course/${course.code}`} className="font-medium text-slate-900 hover:text-blue-600">
                         {course.name}
                       </Link>
                     </td>

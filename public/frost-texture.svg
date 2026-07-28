@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <filter id="noise" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="3" seed="17"/>
+    <feColorMatrix values="0 0 0 0 0.35 0 0 0 0 0.38 0 0 0 0 0.42 0 0 0 0.055 0"/>
+  </filter>
+  <rect width="96" height="96" filter="url(#noise)" opacity="0.55"/>
+  <path d="M-8 28C15 17 31 38 53 27S78 15 104 29M-6 66C17 55 34 76 57 65S81 54 102 67" fill="none" stroke="#64748B" stroke-width="0.6" opacity="0.05"/>
+</svg>

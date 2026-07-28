@@ -45,7 +45,7 @@ export default function OnboardingPage() {
     <div className="mx-auto max-w-lg space-y-8 py-12">
       {/* Header */}
       <div className="text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 shadow-lg shadow-indigo-500/20">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-500/20">
           <GraduationCap className="h-7 w-7 text-white" />
         </div>
         <h1 className="text-2xl font-bold text-slate-900">欢迎来到求是学径</h1>
@@ -66,7 +66,7 @@ export default function OnboardingPage() {
               onClick={() => { setYear(y); setMajor(""); setMajorSearch(""); }}
               className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition ${
                 year === y
-                  ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm"
+                  ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
                   : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
@@ -94,7 +94,7 @@ export default function OnboardingPage() {
               value={majorSearch}
               onChange={(e) => setMajorSearch(e.target.value)}
               placeholder="搜索专业名称..."
-              className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -109,7 +109,7 @@ export default function OnboardingPage() {
                   onClick={() => setMajor(m)}
                   className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition ${
                     major === m
-                      ? "bg-indigo-50 text-indigo-700 font-medium"
+                      ? "bg-blue-50 text-blue-700 font-medium"
                       : "text-slate-600 hover:bg-slate-50"
                   }`}
                 >
@@ -129,7 +129,7 @@ export default function OnboardingPage() {
         <button
           onClick={() => selectMutation.mutate()}
           disabled={selectMutation.isPending}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:bg-indigo-500 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:bg-blue-500 disabled:opacity-50"
         >
           {selectMutation.isPending ? "加载中..." : `确认：${year}级 ${major}`}
           <ArrowRight className="h-5 w-5" />

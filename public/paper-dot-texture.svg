@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 320" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="micro-dots" width="3" height="3" patternUnits="userSpaceOnUse">
+      <circle cx="0.75" cy="0.75" r="0.48" fill="#69727C" opacity="0.24"/>
+    </pattern>
+    <pattern id="fine-dots" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="translate(1 1)">
+      <circle cx="1.2" cy="1.2" r="0.82" fill="#5F6873" opacity="0.24"/>
+    </pattern>
+    <pattern id="mid-dots" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-12)">
+      <circle cx="1.7" cy="1.7" r="1.2" fill="#545E69" opacity="0.3"/>
+    </pattern>
+    <pattern id="dense-dots" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(8)">
+      <circle cx="1.1" cy="1.1" r="1.05" fill="#46505C" opacity="0.3"/>
+    </pattern>
+    <filter id="paper-grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="23"/>
+      <feColorMatrix values="0 0 0 0 0.38 0 0 0 0 0.4 0 0 0 0 0.43 0 0 0 0.045 0"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="320" fill="#FFFFFF"/>
+  <g opacity="0.3">
+    <rect width="1600" height="320" fill="url(#micro-dots)" opacity="0.62"/>
+    <rect width="1600" height="320" fill="url(#fine-dots)" opacity="0.38"/>
+    <rect width="1600" height="320" filter="url(#paper-grain)" opacity="0.42"/>
+    <path d="M960 -40L1335 -40L1518 122L1282 350H900L1162 114Z" fill="url(#mid-dots)" opacity="0.5"/>
+    <path d="M1260 -40L1615 -40V350H1450L1335 216L1530 35Z" fill="url(#dense-dots)" opacity="0.56"/>
+    <path d="M1032 286L1238 80L1412 254L1308 358H1102Z" fill="none" stroke="#66717D" stroke-width="20" opacity="0.055"/>
+    <path d="M1071 286L1238 119L1373 254L1294 333H1118Z" fill="url(#fine-dots)" opacity="0.5"/>
+    <path d="M-70 250L105 75L214 184L104 294Z" fill="url(#mid-dots)" opacity="0.2"/>
+  </g>
+</svg>

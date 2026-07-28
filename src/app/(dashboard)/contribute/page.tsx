@@ -358,7 +358,7 @@ export default function ContributePage() {
               {...register("type")}
               className={cn(
                 "w-full rounded-lg border bg-white px-3 py-2.5 text-sm transition-colors",
-                "focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400",
+                "focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400",
                 errors.type
                   ? "border-red-300 focus:ring-red-500/30"
                   : "border-slate-300",
@@ -390,7 +390,7 @@ export default function ContributePage() {
               placeholder="例：数据结构期末复习笔记"
               className={cn(
                 "w-full rounded-lg border bg-white px-3 py-2.5 text-sm transition-colors",
-                "focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400",
+                "focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400",
                 "placeholder:text-slate-400",
                 errors.title
                   ? "border-red-300 focus:ring-red-500/30"
@@ -412,7 +412,7 @@ export default function ContributePage() {
               placeholder="https://..."
               className={cn(
                 "w-full rounded-lg border bg-white px-3 py-2.5 text-sm transition-colors",
-                "focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400",
+                "focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400",
                 "placeholder:text-slate-400",
                 errors.url
                   ? "border-red-300 focus:ring-red-500/30"
@@ -433,7 +433,7 @@ export default function ContributePage() {
               placeholder="简单描述这个资源的内容和用途..."
               className={cn(
                 "w-full rounded-lg border bg-white px-3 py-2.5 text-sm transition-colors resize-none",
-                "focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400",
+                "focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400",
                 "placeholder:text-slate-400",
                 errors.summary
                   ? "border-red-300 focus:ring-red-500/30"
@@ -468,7 +468,7 @@ export default function ContributePage() {
                     className={cn(
                       "rounded-lg border px-3 py-2 text-sm font-medium transition-all",
                       isSelected
-                        ? "border-indigo-300 bg-indigo-50 text-indigo-700 shadow-sm"
+                        ? "border-blue-300 bg-blue-50 text-blue-700 shadow-sm"
                         : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300",
                     )}
                   >
@@ -503,7 +503,7 @@ export default function ContributePage() {
                   placeholder="搜索课程名称或课号..."
                   className={cn(
                     "w-full rounded-lg border bg-white py-2.5 pl-10 pr-4 text-sm transition-colors",
-                    "focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400",
+                    "focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400",
                     "placeholder:text-slate-400",
                     errors.courseCodes
                       ? "border-red-300 focus:ring-red-500/30"
@@ -528,7 +528,7 @@ export default function ContributePage() {
                       <button
                         type="button"
                         onClick={() => refetchSearch()}
-                        className="text-xs text-indigo-600 hover:underline"
+                        className="text-xs text-blue-600 hover:underline"
                       >
                         点击重试
                       </button>
@@ -558,10 +558,10 @@ export default function ContributePage() {
                               "flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors",
                               alreadySelected
                                 ? "bg-slate-50 text-slate-400 cursor-not-allowed"
-                                : "hover:bg-indigo-50 text-slate-700",
+                                : "hover:bg-blue-50 text-slate-700",
                             )}
                           >
-                            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-mono font-medium text-slate-500">
+                            <span className="course-code rounded bg-slate-100 px-1.5 py-0.5 font-medium text-slate-500">
                               {course.code}
                             </span>
                             <span className="flex-1 truncate">{course.name}</span>
@@ -583,13 +583,13 @@ export default function ContributePage() {
                 {selectedCourseCodes.map((code) => (
                   <span
                     key={code}
-                    className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700"
+                    className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700"
                   >
-                    {code}
+                    <span className="course-code">{code}</span>
                     <button
                       type="button"
                       onClick={() => removeCourse(code)}
-                      className="ml-0.5 rounded-full p-0.5 transition hover:bg-indigo-200"
+                      className="ml-0.5 rounded-full p-0.5 transition hover:bg-blue-200"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -610,7 +610,7 @@ export default function ContributePage() {
               {...register("copyrightStatus")}
               className={cn(
                 "w-full rounded-lg border bg-white px-3 py-2.5 text-sm transition-colors",
-                "focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400",
+                "focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400",
                 errors.copyrightStatus
                   ? "border-red-300 focus:ring-red-500/30"
                   : "border-slate-300",
@@ -637,7 +637,7 @@ export default function ContributePage() {
               <input
                 type="checkbox"
                 {...register("copyrightAgreed")}
-                className="mt-0.5 h-4 w-4 rounded border-amber-300 text-indigo-600 focus:ring-indigo-500"
+                className="mt-0.5 h-4 w-4 rounded border-amber-300 text-blue-600 focus:ring-blue-500"
               />
               <div>
                 <p className="text-sm font-medium text-amber-800">
@@ -659,7 +659,7 @@ export default function ContributePage() {
           disabled={isSubmitting}
           className={cn(
             "mt-8 w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition-all",
-            "bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98]",
+            "bg-blue-600 hover:bg-blue-700 active:scale-[0.98]",
             "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100",
           )}
         >

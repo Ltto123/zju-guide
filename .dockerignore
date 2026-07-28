@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+/fonts
+.playwright-cli
+output
+playwright-report
+test-results
+*.log
+.env*

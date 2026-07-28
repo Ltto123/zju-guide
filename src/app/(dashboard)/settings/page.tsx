@@ -9,14 +9,14 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center gap-3">
-        <Settings className="h-6 w-6 text-indigo-600" />
+        <Settings className="h-6 w-6 text-blue-600" />
         <h2 className="text-xl font-bold text-slate-900">设置</h2>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100">
-            <User className="h-6 w-6 text-indigo-600" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
+            <User className="h-6 w-6 text-blue-600" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-slate-900">{user?.username}</h3>

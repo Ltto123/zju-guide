@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const programs = await prisma.programVersion.findMany({
       where: { isActive: true },
-      select: { majorName: true, year: true, totalCredits: true },
+      select: { id: true, majorName: true, year: true, totalCredits: true },
       orderBy: [{ year: "desc" }, { majorName: "asc" }],
     });
 
@@ -21,7 +21,7 @@ export async function GET() {
       .sort(([a], [b]) => b - a)
       .map(([year, majors]) => ({ year, majors: majors.sort() }));
 
-    return NextResponse.json({ data: { years, total: programs.length } });
+    return NextResponse.json({ data: { years, options: programs, total: programs.length } });
   } catch {
     return NextResponse.json({ error: { code: "INTERNAL_ERROR", message: "服务器内部错误" } }, { status: 500 });
   }

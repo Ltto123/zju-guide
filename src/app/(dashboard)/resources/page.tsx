@@ -21,7 +21,7 @@ export default function ResourcesPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center gap-3">
-        <FileText className="h-6 w-6 text-indigo-600" />
+        <FileText className="h-6 w-6 text-blue-600" />
         <h2 className="text-xl font-bold text-slate-900">学习资料</h2>
       </div>
 
@@ -32,7 +32,7 @@ export default function ResourcesPage() {
           placeholder="搜索资料标题..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
 
@@ -58,7 +58,7 @@ export default function ResourcesPage() {
                   {item.summary && <p className="mt-1 text-sm text-slate-500">{item.summary}</p>}
                 </div>
                 {item.url && (
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="shrink-0 text-indigo-500 hover:text-indigo-600">
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="shrink-0 text-blue-500 hover:text-blue-600">
                     <ExternalLink className="h-4 w-4" />
                   </a>
                 )}

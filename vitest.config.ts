@@ -6,7 +6,9 @@ export default defineConfig({
     globals: true,
     fileParallelism: false,
     env: {
-      DATABASE_URL: "file:./test.db",
+      DATABASE_URL:
+        process.env.DATABASE_URL ??
+        "postgresql://msewiki:msewiki@localhost:5432/msewiki_test",
     },
     globalSetup: ["./tests/global-setup.ts"],
     exclude: ["tests/e2e/**", "node_modules/**"],

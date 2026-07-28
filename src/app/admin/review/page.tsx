@@ -284,9 +284,9 @@ function PendingRow({
             {item.courses.map((c) => (
               <span
                 key={c.code}
-                className="inline-flex items-center gap-0.5 rounded bg-indigo-50 px-1.5 py-0.5 text-xs text-indigo-600"
+                className="inline-flex items-center gap-0.5 rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-600"
               >
-                {c.code} {c.name}
+                <span className="course-code">{c.code}</span> {c.name}
               </span>
             ))}
           </div>
@@ -305,7 +305,7 @@ function PendingRow({
             href={item.resource.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-indigo-500 hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-blue-500 hover:underline"
           >
             <ExternalLink className="h-3 w-3" />
             查看链接
@@ -427,9 +427,9 @@ function ReviewedGroup({
                       {item.courses.map((c) => (
                         <span
                           key={c.code}
-                          className="rounded bg-indigo-50 px-1.5 py-0.5 text-xs text-indigo-500"
+                          className="rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-500"
                         >
-                          {c.code}
+                          <span className="course-code">{c.code}</span>
                         </span>
                       ))}
                     </div>
@@ -441,7 +441,7 @@ function ReviewedGroup({
                     href={item.resource.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 text-xs text-indigo-500 hover:underline inline-flex items-center gap-1"
+                    className="shrink-0 text-xs text-blue-500 hover:underline inline-flex items-center gap-1"
                   >
                     <ExternalLink className="h-3 w-3" />
                     链接
@@ -571,9 +571,9 @@ export default function AdminReviewPage() {
             <h1 className="text-lg font-semibold text-slate-900">审核后台</h1>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <Shield className="h-4 w-4 text-indigo-500" />
+            <Shield className="h-4 w-4 text-blue-500" />
             <span className="text-slate-600">{user.username}</span>
-            <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-xs font-medium text-indigo-700">
+            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700">
               管理员
             </span>
           </div>

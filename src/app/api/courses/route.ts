@@ -6,10 +6,11 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const major = searchParams.get("major");
+    const programVersionIds = searchParams.getAll("programVersionId").filter(Boolean);
     const semester = searchParams.get("semester");
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const pageSize = Math.min(
-      100,
+      500,
       Math.max(1, parseInt(searchParams.get("pageSize") || "20", 10)),
     );
 
@@ -20,7 +21,13 @@ export async function GET(request: NextRequest) {
       where.semester = semester;
     }
 
-    if (major) {
+    if (programVersionIds.length > 0) {
+      where.programCourses = {
+        some: {
+          programVersionId: { in: programVersionIds },
+        },
+      };
+    } else if (major) {
       // Filter courses that belong to the given major via ProgramCourse -> ProgramVersion
       where.programCourses = {
         some: {
