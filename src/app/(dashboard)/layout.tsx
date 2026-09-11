@@ -92,7 +92,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <>
               <div className="mx-2 my-4 border-t border-slate-200" />
               <p className="mx-4 mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">管理</p>
-              {[{ href: "/admin/review", label: "审核队列", icon: ClipboardList }, { href: "/admin/import", label: "培养方案导入", icon: Upload }].map((item) => {
+              {[{ href: "/admin/review", label: "审核队列", icon: ClipboardList }, { href: "/admin/import", label: "培养方案导入", icon: Upload }, { href: "/admin/course-corrections", label: "课程修正", icon: BookOpen }].map((item) => {
                 const Icon = item.icon;
                 const active = pathname === item.href;
                 return (

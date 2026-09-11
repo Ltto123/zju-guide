@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { BookOpen, Search } from "lucide-react";
@@ -10,6 +10,9 @@ export default function CoursesPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
+  useEffect(() => {
+    setSearch(new URLSearchParams(window.location.search).get("search") ?? "");
+  }, []);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["courses", search, page],

@@ -178,6 +178,7 @@ model ProgramCourse {
   id                String  @id @default(uuid())
   programVersionId  String
   courseCode        String
+  courseNameOverride String?
   suggestedSemester Int     // 1-10 (包含暑期)
   isCompulsory      Boolean
   requirementGroupId String?

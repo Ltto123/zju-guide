@@ -329,7 +329,7 @@ function toProgramCourseSnapshots(
     requirementGroupId: pc.requirementGroupId,
     course: {
       code: pc.course.code,
-      name: pc.course.name,
+      name: pc.courseNameOverride ?? pc.course.name,
       credits: pc.course.credits,
       department: pc.course.department,
       category: pc.course.category,
@@ -362,7 +362,7 @@ function toRequirementGroupSnapshots(
       requirementGroupId: pc.requirementGroupId,
       course: {
         code: pc.course.code,
-        name: pc.course.name,
+        name: pc.courseNameOverride ?? pc.course.name,
         credits: pc.course.credits,
         department: pc.course.department,
         category: pc.course.category,
