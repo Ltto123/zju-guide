@@ -1,20 +1,24 @@
 import { lookup } from "node:dns/promises";
 import { request } from "node:https";
+import { request as httpRequest } from "node:http";
 import { isIP } from "node:net";
 
 const AGENT = "ZjuGuideImporter";
 const MAX_BYTES = 2 * 1024 * 1024;
-const ROOTS = [
-  "https://zju-turing.github.io/TuringCourses/",
-  "https://bms-zju.github.io/BMS_Database/",
-];
+export function assertPublicWebsite(input: string): URL {
+  const url = new URL(input);
+  const host = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.port ||
+      host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') ||
+      !host.includes('.') && !isIP(host) || isIP(host) && !isPublicAddress(host))
+    throw new Error('请输入不含账号密码的公开 HTTP/HTTPS 网站地址');
+  return url;
+}
 
 export function assertAllowedUrl(input: string, baseUrl: string, robots = false): URL {
-  if (!ROOTS.includes(baseUrl)) throw new Error("未知来源");
-  const url = new URL(input);
-  const base = new URL(baseUrl);
+  const url = assertPublicWebsite(input);
+  const base = assertPublicWebsite(baseUrl);
   if (
-    url.protocol !== "https:" ||
     url.origin !== base.origin ||
     url.username ||
     url.password ||
@@ -122,7 +126,7 @@ async function fetchOnce(
     throw new FetchError("来源 DNS 包含非公网地址");
   const address = addresses[0]!;
   return new Promise((resolve, reject) => {
-    const req = request(
+    const req = (url.protocol === 'http:' ? httpRequest : request)(
       url,
       {
         method: "GET",

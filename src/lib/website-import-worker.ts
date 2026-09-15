@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "./prisma";
-import { scanSource, matchCourses, canonicalizeUrl, resolveSource } from "./website-sources";
+import { scanSource, matchCourses, canonicalizeUrl, resolveSource, type WebsiteLink } from "./website-sources";
 import { importTransaction } from "./website-import-service";
 
 export async function runImportOnce(scanner = scanSource): Promise<boolean> {
@@ -49,7 +49,7 @@ export async function runImportOnce(scanner = scanSource): Promise<boolean> {
         where: { id: job.id, leaseToken: token, status: "RUNNING" },
       }));
     const persist = async (
-      items: { title: string; url: string }[],
+      items: WebsiteLink[],
       scanned: number,
       errors: string[],
     ) => {
@@ -71,8 +71,9 @@ export async function runImportOnce(scanner = scanSource): Promise<boolean> {
               url: canonicalUrl,
               canonicalUrl,
               summary: `来自${source.name}的${item.title}学习资料入口。`.slice(0, 500),
-              courseCodes: match.courseCodes,
-              matchReason: match.matchReason,
+              resourceScope: item.resourceScope || 'COURSE',
+              courseCodes: item.resourceScope === 'GENERAL' ? [] : match.courseCodes,
+              matchReason: item.resourceScope === 'GENERAL' ? '网站首页：通用资源入口' : match.matchReason,
               status: duplicate ? "DUPLICATE" : "READY",
               duplicateResourceId: duplicate,
             },

@@ -16,6 +16,7 @@ type Candidate = {
   type: string;
   applicableStage: string;
   courseCodes: string[];
+  resourceScope?: "COURSE" | "GENERAL";
   courseLabels?: Record<string, string>;
   matchReason: string | null;
   confirmed: boolean;
@@ -60,6 +61,7 @@ function CandidateEditor({
   selected,
   onSelect,
   onSaved,
+  onDirty,
 }: {
   candidate: Candidate;
   jobId: string;
@@ -67,6 +69,7 @@ function CandidateEditor({
   selected: boolean;
   onSelect: (selected: boolean) => void;
   onSaved: () => Promise<void>;
+  onDirty: (dirty: boolean) => void;
 }) {
   const [draft, setDraft] = useState(candidate);
   const [dirty, setDirty] = useState(false);
@@ -91,6 +94,7 @@ function CandidateEditor({
   function change(patch: Partial<Candidate>) {
     setDraft((previous) => ({ ...previous, ...patch }));
     setDirty(true);
+    onDirty(true);
     setConfirmed(false);
     onSelect(false);
   }
@@ -105,10 +109,12 @@ function CandidateEditor({
         type: draft.type,
         applicableStage: draft.applicableStage,
         courseCodes: draft.courseCodes,
+        resourceScope: draft.resourceScope ?? "COURSE",
       });
       await onSaved();
       setDirty(false);
-      toast.success("已保存并确认课程关联");
+      onDirty(false);
+      toast.success("已保存并确认资源");
     } catch (error) {
       toast.error(message(error));
     } finally {
@@ -128,6 +134,9 @@ function CandidateEditor({
         />
         <div className="min-w-0 flex-1">
           <p className="font-medium text-slate-900">{candidate.title}</p>
+          {candidate.resourceScope === "GENERAL" && (
+            <p className="mt-1 text-xs text-slate-500">通用资源入口（无需关联课程）</p>
+          )}
           <a
             href={candidate.url}
             target="_blank"
@@ -215,65 +224,88 @@ function CandidateEditor({
               </select>
             </label>
           </div>
+          <label className="block text-sm text-slate-700">
+            资源范围
+            <select
+              className={`${inputClass} mt-1`}
+              value={draft.resourceScope ?? "COURSE"}
+              onChange={(event) =>
+                change({ resourceScope: event.target.value as "COURSE" | "GENERAL" })
+              }
+            >
+              <option value="COURSE">课程资源</option>
+              <option value="GENERAL">通用资源入口（无需关联课程）</option>
+            </select>
+          </label>
           <div className="rounded-lg bg-blue-50 p-3 text-sm">
-            <p className="text-slate-700">
-              课程建议：{candidate.matchReason || "暂无可靠匹配，请手动搜索课程"}
-            </p>
-            <div className="my-2 flex flex-wrap gap-2">
-              {draft.courseCodes.map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  className="rounded-full border border-blue-200 bg-white px-2 py-1 text-xs text-blue-700"
-                  aria-label={`移除课程 ${code}`}
-                  onClick={() =>
-                    change({ courseCodes: draft.courseCodes.filter((item) => item !== code) })
-                  }
-                >
-                  {draft.courseLabels?.[code] ?? candidate.courseLabels?.[code] ?? "课程"} · {code} ×
-                </button>
-              ))}
-            </div>
-            <label className="block">
-              关联课程
-              <input
-                className={`${inputClass} mt-1`}
-                placeholder="搜索课程名称或课号"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </label>
-            {debouncedSearch && (
-              <div className="mt-2 max-h-40 overflow-auto rounded border border-blue-100 bg-white">
-                {courses.isFetching ? (
-                  <p className="p-2 text-slate-500">搜索中…</p>
-                ) : courses.isError ? (
-                  <button
-                    type="button"
-                    onClick={() => void courses.refetch()}
-                    className="p-2 text-red-600"
-                  >
-                    搜索失败，点击重试
-                  </button>
-                ) : !courses.data?.length ? (
-                  <p className="p-2 text-slate-500">未找到课程</p>
-                ) : (
-                  courses.data.map((course) => (
+            {draft.resourceScope === "GENERAL" ? (
+              <p className="text-slate-700">作为通用资源入口投稿，无需关联具体课程。</p>
+            ) : (
+              <>
+                <p className="text-slate-700">
+                  课程建议：{candidate.matchReason || "暂无可靠匹配，请手动搜索课程"}
+                </p>
+                <div className="my-2 flex flex-wrap gap-2">
+                  {draft.courseCodes.map((code) => (
                     <button
+                      key={code}
                       type="button"
-                      key={course.code}
-                      disabled={draft.courseCodes.includes(course.code)}
-                      className="block w-full px-3 py-2 text-left hover:bg-blue-50 disabled:opacity-40"
-                      onClick={() => {
-                        change({ courseCodes: [...draft.courseCodes, course.code], courseLabels: {...draft.courseLabels, [course.code]: course.name} });
-                        setSearch("");
-                      }}
+                      className="rounded-full border border-blue-200 bg-white px-2 py-1 text-xs text-blue-700"
+                      aria-label={`移除课程 ${code}`}
+                      onClick={() =>
+                        change({ courseCodes: draft.courseCodes.filter((item) => item !== code) })
+                      }
                     >
-                      {course.code} · {course.name}
+                      {draft.courseLabels?.[code] ?? candidate.courseLabels?.[code] ?? "课程"} ·{" "}
+                      {code} ×
                     </button>
-                  ))
+                  ))}
+                </div>
+                <label className="block">
+                  关联课程
+                  <input
+                    className={`${inputClass} mt-1`}
+                    placeholder="搜索课程名称或课号"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </label>
+                {debouncedSearch && (
+                  <div className="mt-2 max-h-40 overflow-auto rounded border border-blue-100 bg-white">
+                    {courses.isFetching ? (
+                      <p className="p-2 text-slate-500">搜索中…</p>
+                    ) : courses.isError ? (
+                      <button
+                        type="button"
+                        onClick={() => void courses.refetch()}
+                        className="p-2 text-red-600"
+                      >
+                        搜索失败，点击重试
+                      </button>
+                    ) : !courses.data?.length ? (
+                      <p className="p-2 text-slate-500">未找到课程</p>
+                    ) : (
+                      courses.data.map((course) => (
+                        <button
+                          type="button"
+                          key={course.code}
+                          disabled={draft.courseCodes.includes(course.code)}
+                          className="block w-full px-3 py-2 text-left hover:bg-blue-50 disabled:opacity-40"
+                          onClick={() => {
+                            change({
+                              courseCodes: [...draft.courseCodes, course.code],
+                              courseLabels: { ...draft.courseLabels, [course.code]: course.name },
+                            });
+                            setSearch("");
+                          }}
+                        >
+                          {course.code} · {course.name}
+                        </button>
+                      ))
+                    )}
+                  </div>
                 )}
-              </div>
+              </>
             )}
             <label className="mt-3 flex items-start gap-2 text-slate-700">
               <input
@@ -283,10 +315,11 @@ function CandidateEditor({
                 onChange={(e) => {
                   setConfirmed(e.target.checked);
                   setDirty(true);
+                  onDirty(true);
                   onSelect(false);
                 }}
               />
-              我已核对以上课程关联（自动建议不会直接用于投稿）
+              {draft.resourceScope === "GENERAL" ? "我已核对通用资源入口" : "我已核对以上课程关联"}
             </label>
           </div>
           <button
@@ -294,7 +327,7 @@ function CandidateEditor({
             className={buttonClass}
             disabled={
               !confirmed ||
-              !draft.courseCodes.length ||
+              (draft.resourceScope !== "GENERAL" && !draft.courseCodes.length) ||
               draft.title.trim().length < 2 ||
               saving ||
               (!dirty && candidate.confirmed)
@@ -313,9 +346,12 @@ export function WebsiteImportPanel() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [source, setSource] = useState("");
+  const [includeUnmatchedAsGeneral, setIncludeUnmatchedAsGeneral] = useState(false);
   const [chosenJob, setChosenJob] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [dirtyIds, setDirtyIds] = useState<string[]>([]);
+  const [submissionFeedback, setSubmissionFeedback] = useState("");
   const list = useQuery({
     queryKey: ["website-imports", user?.id],
     queryFn: () => api.get<{ sources: Source[]; jobs: Job[]; enabled: boolean }>(endpoint),
@@ -337,6 +373,14 @@ export function WebsiteImportPanel() {
   const eligible = candidates.filter(
     (candidate) => candidate.confirmed && ["READY", "FAILED"].includes(candidate.status),
   );
+  const ready = candidates.filter(
+    (candidate) =>
+      ["READY", "FAILED"].includes(candidate.status) &&
+      (includeUnmatchedAsGeneral || candidate.confirmed ||
+        candidate.resourceScope === "GENERAL" ||
+        candidate.courseCodes.length === 1),
+  );
+  const hasUnsavedChanges = candidates.some((candidate) => dirtyIds.includes(candidate.id));
   const selectedIds = selected.filter((id) => eligible.some((candidate) => candidate.id === id));
   async function refresh() {
     await Promise.all([
@@ -368,8 +412,7 @@ export function WebsiteImportPanel() {
         role="alert"
         className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900"
       >
-        {(list.error instanceof ApiError && list.error.status === 503) ||
-        list.data?.enabled === false
+        {list.data?.enabled === false
           ? "网站导入功能尚未启用，请联系部署管理员。"
           : message(list.error)}
         <button type="button" onClick={() => void list.refetch()} className="ml-3 underline">
@@ -389,20 +432,24 @@ export function WebsiteImportPanel() {
             const created = await api.post<Job>(endpoint, { sourceId });
             setChosenJob(created.id);
             setSelected([]);
+            setDirtyIds([]);
+            setSubmissionFeedback("");
             toast.success("扫描任务已创建");
           });
         }}
       >
-        <h2 className="font-semibold text-slate-900">从支持的网站发现资源</h2>
+        <h2 className="font-semibold text-slate-900">从公开网站发现资源</h2>
         <p className="mt-1 text-sm text-slate-500">
-          扫描公开链接，核对课程后批量送审。仅保存资源链接；每次最多 30 条，每日最多 100 条。
+          支持粘贴自定义公开 HTTP/HTTPS
+          网址；网站名称仅支持下方推荐来源。扫描后可一键投稿明确匹配的课程资源与通用入口，仅保存链接。每次最多
+          30 条，每日最多 100 条。
         </p>
         <label className="mt-4 block text-sm text-slate-700">
-          网站名称或支持的网址
+          推荐网站名称或公开网址
           <input
             list="website-import-sources"
             className={`${inputClass} mt-2`}
-            placeholder="选择网站，或粘贴支持的网址"
+            placeholder="选择推荐网站，或粘贴公开网址 https://…"
             value={source}
             onChange={(e) => setSource(e.target.value)}
             required
@@ -433,6 +480,8 @@ export function WebsiteImportPanel() {
           onChange={(e) => {
             setChosenJob(e.target.value);
             setSelected([]);
+            setDirtyIds([]);
+            setSubmissionFeedback("");
           }}
         >
           {!list.data?.jobs.length && <option value="">暂无导入任务</option>}
@@ -470,7 +519,42 @@ export function WebsiteImportPanel() {
                 {job.error}
               </p>
             )}
+            {submissionFeedback && (
+              <p role="status" className="mt-2 text-sm text-slate-700">
+                {submissionFeedback}
+              </p>
+            )}
+            {job.status === "COMPLETED" && <label className="mt-3 flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={includeUnmatchedAsGeneral} disabled={busy} onChange={e => setIncludeUnmatchedAsGeneral(e.target.checked)} />未匹配或匹配不唯一的条目作为通用资源投稿（不关联课程）</label>}
             <div className="mt-3 flex flex-wrap items-center gap-2">
+              {job.status === "COMPLETED" && (
+                <button
+                  type="button"
+                  disabled={busy || !ready.length || hasUnsavedChanges}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  onClick={() =>
+                    void run(async () => {
+                      const result = await api.post<{
+                        results: { candidateId: string; status: string; error?: string }[];
+                        skipped: number;
+                      }>(`${endpoint}/${job.id}`, { action: "submit-ready", includeUnmatchedAsGeneral });
+                      const failures = result.results.filter((item) => item.status === "FAILED");
+                      const submitted = result.results.filter(
+                        (item) => item.status === "SUBMITTED",
+                      ).length;
+                      const duplicates = result.results.filter(
+                        (item) => item.status === "DUPLICATE",
+                      ).length;
+                      const feedback = `已送审 ${submitted} 条，重复 ${duplicates} 条，失败 ${failures.length} 条，跳过 ${result.skipped} 条。`;
+                      setSubmissionFeedback(feedback);
+                      setSelected(failures.map((item) => item.candidateId));
+                      if (failures.length) toast.error(feedback);
+                      else toast.success(feedback);
+                    })
+                  }
+                >
+                  {busy ? "投稿处理中…" : `一键投稿可用资源（${ready.length}条）`}
+                </button>
+              )}
               {active(job) && (
                 <button
                   type="button"
@@ -514,6 +598,12 @@ export function WebsiteImportPanel() {
                 前往审核此批次 →
               </Link>
             </div>
+            {job.status === "COMPLETED" && (
+              <p className="mt-3 text-xs text-slate-500">
+                一键投稿将确认并提交单一课程建议、已人工确认项及通用入口；未匹配或匹配不唯一的条目默认跳过，勾选上方选项后将作为不关联课程的通用资源投稿。
+                {hasUnsavedChanges && " 请先保存候选资源的修改，再一键投稿。"}
+              </p>
+            )}
           </div>
           {!candidates.length && !active(job) && (
             <p className="py-4 text-center text-sm text-slate-500">此任务没有可导入的候选资源。</p>
@@ -533,6 +623,13 @@ export function WebsiteImportPanel() {
                 )
               }
               onSaved={refresh}
+              onDirty={(dirty) =>
+                setDirtyIds((previous) =>
+                  dirty
+                    ? [...new Set([...previous, candidate.id])]
+                    : previous.filter((id) => id !== candidate.id),
+                )
+              }
             />
           ))}
           {!!candidates.length && !closed && !active(job) && (

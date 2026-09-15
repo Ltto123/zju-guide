@@ -23,8 +23,13 @@ export async function POST(request: NextRequest) {
     const body = await importBody(request);
     if (typeof body.sourceId !== "string" || body.sourceId.length > 2048)
       throw new ImportError("请选择来源");
+    if (body.mode !== undefined && body.mode !== 'site') throw new ImportError('无效导入方式');
+    const entry = body.mode === 'site' ? {
+      title: typeof body.title === 'string' ? body.title : body.sourceId.slice(0,120),
+      summary: typeof body.summary === 'string' ? body.summary : '网站通用资源入口（未自动核验站内内容）',
+    } : undefined;
     return NextResponse.json(
-      { data: await createImportJob(userId, body.sourceId) },
+      { data: await createImportJob(userId, body.sourceId, entry) },
       { status: 201 },
     );
   } catch (e) {

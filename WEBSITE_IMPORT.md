@@ -1,6 +1,6 @@
 # 网站资源导入 MVP
 
-管理员在“投稿 → 从网站导入”选择 TuringCourses 或 BMS Database，扫描公开课程目录，确认课程、标题、分类后批量送审。课程资源保存外部链接与来源信息；不下载附件或转载正文。
+管理员在“投稿 → 从网站导入”粘贴公开 HTTP/HTTPS 网址，或选择 TuringCourses、BMS Database，扫描同站公开 HTML 链接后批量送审。课程资源保存外部链接与来源信息；不下载附件或转载正文。
 
 ## 开发与部署基线
 
@@ -139,3 +139,16 @@ pnpm exec tsx tests/deployment/website-import-upgrade.ts
 5. 能否先部署测试环境、执行迁移并运行一个后台 worker；可接受的维护时间及失败回滚方式。
 
 密码、数据库连接密码、令牌和私钥应通过服务器平台或 GitHub Secrets 安全配置，不放入 PR 或聊天。
+
+
+## 自定义网站与一键操作（2026-09-15）
+
+新网址无需添加来源名单。通用扫描每批最多 30 条候选、最多访问 12 页；预置来源仍使用专用解析器。仅提取同站公开 HTML 链接，不执行页面脚本。登录、robots 限制、网络错误和动态加载内容可能影响发现结果；扫描结果不代表全站完整资源清单。
+
+点击“一键投稿可用资源”会提交已确认项、单一课程建议及通用入口。若希望省去逐项关联课程，可显式勾选“未匹配或匹配不唯一的条目作为通用资源投稿”；这类资源不关联课程。重复链接自动跳过，失败项可重试。
+
+审核页提供选择、全选、“通过选中”和“一键通过当前”操作，每次最多 100 项；每条保留审核人、时间及审计记录。批量通过只处理待审核草稿，不覆盖撤回或已驳回记录。
+
+API：`POST /api/admin/website-imports/:id`，body 为 `{action:"submit-ready",includeUnmatchedAsGeneral:false}`。核心网站入口可通过创建任务时传入 `{sourceId:"https://…",mode:"site",title:"…",summary:"…"}` 投稿；此方式明确不宣称已扫描站内内容。批量审核使用 `POST /api/admin/submissions/bulk-approve`，body 为 `{submissionIds:["UUID"]}`。
+
+部署必须应用 `20260915120000_general_website_resources` 迁移并重启 app 与 worker。该迁移只新增默认 COURSE 的候选范围字段，不清空现有数据。

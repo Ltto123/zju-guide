@@ -302,6 +302,7 @@ model WebsiteImportJob {
 }
 
 model WebsiteImportCandidate {
+  resourceScope       String   @default("COURSE")
   id                  String @id @default(uuid())
   jobId               String
   job                 WebsiteImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)

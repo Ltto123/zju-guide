@@ -4,6 +4,7 @@ import {
   getImportJob,
   updateCandidate,
   submitCandidates,
+  submitReadyCandidates,
   cancelJob,
   withdrawBatch,
 } from "@/lib/website-import-service";
@@ -37,7 +38,12 @@ export async function POST(request: NextRequest, { params }: Context) {
   try {
     const userId = await importAdmin(request),
       { id } = await params;
-    const { candidateIds } = selectionSchema.parse(await importBody(request));
+    const body = await importBody(request);
+    if (body.action === 'submit-ready') {
+      if (body.includeUnmatchedAsGeneral !== undefined && typeof body.includeUnmatchedAsGeneral !== 'boolean') throw new ImportError('无效的通用资源选项');
+      return NextResponse.json({data:await submitReadyCandidates(userId,id,body.includeUnmatchedAsGeneral === true)});
+    }
+    const { candidateIds } = selectionSchema.parse(body);
     return NextResponse.json({ data: await submitCandidates(userId, id, candidateIds) });
   } catch (e) {
     return importFailure(e);
