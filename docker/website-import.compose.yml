@@ -1,20 +1,38 @@
-# Merge with docker/docker-compose.yml after applying the additive migration.
-# docker compose -f docker/docker-compose.yml -f docker/website-import.compose.yml up -d
+# Opt-in deployment: run from the repository root with --env-file .env.
+# See WEBSITE_IMPORT.md for backup and legacy db-push database prerequisites.
+# docker compose --env-file .env -f docker/docker-compose.yml -f docker/website-import.compose.yml up -d --build
 services:
   app:
     environment:
-      WEBSITE_IMPORT_ENABLED: ${WEBSITE_IMPORT_ENABLED:-false}
+      WEBSITE_IMPORT_ENABLED: ${WEBSITE_IMPORT_ENABLED:-true}
+    command: [node, server.js]
+    depends_on:
+      website-import-migrate:
+        condition: service_completed_successfully
+  website-import-migrate:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://msewiki:msewiki@db:5432/msewiki
+      NODE_ENV: production
+    command: [node, node_modules/prisma/build/index.js, migrate, deploy]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
   website-import-worker:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    profiles: [website-import]
     environment:
       DATABASE_URL: postgresql://msewiki:msewiki@db:5432/msewiki
-      WEBSITE_IMPORT_ENABLED: ${WEBSITE_IMPORT_ENABLED:-false}
+      WEBSITE_IMPORT_ENABLED: ${WEBSITE_IMPORT_ENABLED:-true}
       NODE_ENV: production
     command: [node, node_modules/tsx/dist/cli.mjs, scripts/website-import-worker.ts]
     depends_on:
       db:
         condition: service_healthy
+      website-import-migrate:
+        condition: service_completed_successfully
     restart: unless-stopped

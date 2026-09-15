@@ -94,6 +94,8 @@ pnpm db:seed
 
 ### 4. 本地开发（不使用 Docker）
 
+网站资源导入还需要数据库增量迁移和后台 worker。启用方法、完整 Compose 命令和部署失败处理见 [网站导入部署说明](WEBSITE_IMPORT.md#部署后不可用修复与验收)；只更新前端或单独启动 app 不足以完成部署。
+
 ```bash
 pnpm install
 pnpm db:generate      # 生成 Prisma Client

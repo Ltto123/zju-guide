@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 const db = vi.hoisted(() => ({
   user: { findUnique: vi.fn() },
   websiteImportJob: { findMany: vi.fn() },
@@ -21,6 +22,19 @@ beforeEach(() => {
   process.env.WEBSITE_IMPORT_ENABLED = "true";
 });
 describe("administrator import access", () => {
+  it.each(['P2021', 'P2022'])("reports missing schema %s as a deployment problem", async (code) => {
+    auth.requireRole.mockResolvedValue({ userId: 'admin' });
+    db.user.findUnique.mockResolvedValue({ role: 'ADMIN' });
+    db.websiteImportJob.findMany.mockRejectedValue(new Prisma.PrismaClientKnownRequestError(
+      'private database details', { code, clientVersion: '6.5.0' },
+    ));
+    const result = await GET(new NextRequest('http://localhost/api/admin/website-imports'));
+    expect(result.status).toBe(503);
+    expect(await result.json()).toEqual({ error: {
+      code: 'IMPORT_SCHEMA_NOT_READY',
+      message: '网站导入的数据结构尚未更新，请联系管理员完成数据库升级后重试',
+    } });
+  });
   it("prevents editing a withdrawn batch back into the pending queue", async () => {
     auth.requireAuth.mockResolvedValue({userId:'admin'});
     db.resource.findUnique.mockResolvedValue({submitterId:'admin',importBatch:{status:'WITHDRAWN'}});
