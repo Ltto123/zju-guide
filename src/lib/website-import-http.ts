@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { Prisma } from "@prisma/client";
 import { AuthError, requireRole } from "./auth";
 import { prisma } from "./prisma";
 import { ImportError } from "./website-import-policy";
@@ -38,6 +39,17 @@ export async function importBody(request: NextRequest) {
   }
 }
 export function importFailure(error: unknown) {
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    ['P2021', 'P2022'].includes(error.code)
+  ) {
+    console.error('Website import schema not ready:', error.code,
+      'Apply prisma migrate deploy against the app database, then restart app and worker.');
+    return NextResponse.json({ error: {
+      code: 'IMPORT_SCHEMA_NOT_READY',
+      message: '网站导入的数据结构尚未更新，请联系管理员完成数据库升级后重试',
+    } }, { status: 503 });
+  }
   if (error instanceof ImportError || error instanceof AuthError)
     return NextResponse.json(
       { error: { code: error.code, message: error.message } },

@@ -1,13 +1,14 @@
 import { load } from "cheerio";
-import { assertAllowedUrl, createSourceFetcher } from "./website-fetch";
+import { assertAllowedUrl, assertPublicWebsite, createSourceFetcher } from "./website-fetch";
 
 export const WEBSITE_SOURCES = [
   { id: "turing", name: "TuringCourses", baseUrl: "https://zju-turing.github.io/TuringCourses/" },
   { id: "bms", name: "BMS Database", baseUrl: "https://bms-zju.github.io/BMS_Database/" },
 ] as const;
-export type WebsiteLink = { title: string; url: string };
+export type WebsiteLink = { title: string; url: string; resourceScope?: 'GENERAL' | 'COURSE' };
+type Source = { id: string; name: string; baseUrl: string; startUrl?: string; custom?: boolean };
 
-export function resolveSource(input: string) {
+export function resolveSource(input: string): Source {
   const value = input.trim();
   const byName = WEBSITE_SOURCES.find(
     (s) => s.id === value.toLowerCase() || s.name.toLowerCase() === value.toLowerCase(),
@@ -21,8 +22,10 @@ export function resolveSource(input: string) {
       return false;
     }
   });
-  if (!source) throw new Error("仅支持 TuringCourses 和 BMS Database 的已配置网址");
-  return source;
+  if (source) return source;
+  const url = assertPublicWebsite(value);
+  const canonical = canonicalizeUrl(url.href);
+  return { id: canonical, name: url.hostname, baseUrl: url.origin+'/', startUrl: canonical, custom: true };
 }
 
 export function canonicalizeUrl(input: string): string {
@@ -69,6 +72,7 @@ function pathKind(
     .slice(new URL(source.baseUrl).pathname.length)
     .replace(/\/$/, "");
   if (!relative) return "directory";
+  if (source.custom) return /\.(?:pdf|zip|rar|7z|png|jpg|jpeg|svg|gif|css|js|ico|mp4|mp3|woff2?)$/i.test(relative) ? undefined : 'course';
   if (source.id === "turing") {
     if (
       /^(political|general|math_phys|short_term|others|major\/(mandatory|elective)|general\/(core|elective|others))$/.test(
@@ -113,7 +117,8 @@ function links(html: string, pageUrl: string, sourceId: string) {
         !kind ||
         !title ||
         title.length > 200 ||
-        /^(课程主页|上一页|下一页|首页|主页)$/.test(title)
+        /^(课程主页|上一页|下一页|首页|主页|首页 Home|Home|Next|Previous|登录|注册|搜索|Login|Search|关于|About|返回顶部|编辑此页)$/i.test(title) ||
+        /\/(?:login|logout|signin|signup|search)(?:[/?]|$)/i.test(url)
       )
         return;
       if (!found.has(url) || anchor.hasClass("course-catalog-item"))
@@ -140,7 +145,7 @@ export async function scanSource(
 ): Promise<{ items: WebsiteLink[]; scanned: number; errors: string[] }> {
   const source = resolveSource(sourceId),
     fetchPage = createSourceFetcher(source.baseUrl);
-  const queue = [source.baseUrl as string],
+  const queue = [source.startUrl || source.baseUrl],
     visited = new Set<string>(),
     items = new Map<string, WebsiteLink>(),
     errors: string[] = [];
@@ -154,14 +159,20 @@ export async function scanSource(
     try {
       const page = await fetchPage(url);
       if (await callbacks?.isCancelled?.()) break;
+      if (source.custom && !items.size) {
+        const $ = load(page.html);
+        const heading = $('h1').first().text().replace(/¶/g, '').trim();
+        const title = ((/^(首页|主页|Home)$/i.test(heading) ? $('title').text() : heading) || $('title').text() || source.name).replace(/\s+/g,' ').trim().slice(0,120);
+        items.set(page.url, {title, url:page.url, resourceScope:'GENERAL'});
+      }
       for (const link of links(page.html, page.url, source.id)) {
-        if (link.kind === "course" && items.size < 30)
+        if (link.kind === "course" && items.size < 30 && !items.has(link.url))
           items.set(link.url, { title: link.title, url: link.url });
         if (
-          link.kind === "directory" &&
+          (link.kind === "directory" || source.custom) &&
           !visited.has(link.url) &&
           !queue.includes(link.url) &&
-          queue.length + visited.size < 60
+          queue.length + visited.size < (source.custom ? 12 : 60)
         )
           queue.push(link.url);
       }

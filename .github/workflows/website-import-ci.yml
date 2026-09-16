@@ -1,7 +1,7 @@
 name: Website import validation
 on:
   push:
-    branches: [master, 'feat/website-resource-import']
+    branches: [master, 'feat/website-resource-import', 'fix/website-import-deployment']
   pull_request:
     branches: [master]
   workflow_dispatch:
@@ -36,6 +36,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate
+      - run: node tests/deployment/website-import-compose.mjs
+      - run: pnpm exec prisma migrate deploy
+      - run: pnpm exec tsx tests/deployment/website-import-upgrade.ts
       - run: pnpm typecheck
       - run: pnpm test:unit
       - run: pnpm test

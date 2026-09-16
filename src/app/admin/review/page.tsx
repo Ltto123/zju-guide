@@ -249,17 +249,24 @@ function PendingRow({
   onReject,
   isApproving,
   isRejecting,
+  selected,
+  onSelect,
+  selectionDisabled,
 }: {
   item: SubmissionItem;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
   isApproving: boolean;
   isRejecting: boolean;
+  selected: boolean;
+  onSelect: () => void;
+  selectionDisabled: boolean;
 }) {
   const busy = isApproving || isRejecting;
 
   return (
     <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-4 last:border-b-0 sm:flex-row sm:items-center">
+      <input type="checkbox" aria-label={`选择 ${item.resource.title}`} checked={selected} onChange={onSelect} disabled={selectionDisabled || busy} className="h-4 w-4" />
       {/* Left: info */}
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-start gap-2">
@@ -490,6 +497,8 @@ export default function AdminReviewPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [batch, setBatch] = useState<string | null>(null);
+  const [selection, setSelection] = useState<{ batch: string | null; data: SubmissionsResponse | undefined; ids: string[] }>({ batch: null, data: undefined, ids: [] });
+  const [bulkResults, setBulkResults] = useState<{ batch: string | null; results: { id: string; status: string }[] } | null>(null);
   useEffect(() => {
     const syncBatch = () => setBatch(new URLSearchParams(window.location.search).get("batch") ?? "");
     syncBatch();
@@ -518,6 +527,18 @@ export default function AdminReviewPage() {
   });
 
   // ---- Mutations ----
+  const bulkMutation = useMutation({
+    mutationFn: ({ ids }: { ids: string[]; batch: string | null; data: SubmissionsResponse | undefined }) =>
+      api.post<{ results: { id: string; status: string }[] }>("/api/admin/submissions/bulk-approve", { submissionIds: ids }),
+    onSuccess: async (response, submitted) => {
+      setBulkResults({ batch: submitted.batch, results: response.results });
+      setSelection((current) => current.data === submitted.data && current.batch === submitted.batch ? { ...current, ids: [] } : current);
+      const approved = response.results.filter((result) => result.status === "APPROVED" || result.status === "ALREADY_APPROVED").length;
+      toast.success(`批量审核完成：${approved} 项已通过，${response.results.length - approved} 项未通过`);
+      await queryClient.invalidateQueries({ queryKey: ["admin", "submissions"] });
+    },
+    onError: (err) => toast.error(err instanceof ApiError ? err.message : "批量审核失败，请重试"),
+  });
   const approveMutation = useMutation({
     mutationFn: (id: string) =>
       api.patch(`/api/admin/submissions/${id}`, { result: "APPROVED" }),
@@ -555,6 +576,12 @@ export default function AdminReviewPage() {
   const reviewed = data?.reviewed ?? [];
   const activeItems = tab === "pending" ? pending : reviewed;
   const hasData = pending.length > 0 || reviewed.length > 0;
+  // Bind selection to the exact loaded result and batch, never a previous query's rows.
+  const selectedIds = selection.batch === batch && selection.data === data
+    ? selection.ids.filter((id) => pending.some((item) => item.id === id)) : [];
+  const reviewBusy = bulkMutation.isPending || approveMutation.isPending || rejectMutation.isPending;
+  const visiblePending = pending.slice(0, 100);
+  const selectIds = (ids: string[]) => setSelection({ batch, data, ids });
 
   // ---- Auth loading ----
   if (isAuthLoading) {
@@ -656,6 +683,10 @@ export default function AdminReviewPage() {
         </div>
 
         {/* ── Content area ───────────────────────────── */}
+        {bulkResults?.batch === batch && <div role="status" className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+          <p>批量审核结果：{bulkResults.results.filter((result) => result.status === "APPROVED" || result.status === "ALREADY_APPROVED").length} 项已通过</p>
+          {bulkResults.results.filter((result) => result.status !== "APPROVED" && result.status !== "ALREADY_APPROVED").map((result) => <p key={result.id} className="break-all">{result.id}：{({ NOT_FOUND: "投稿不存在", NOT_PENDING: "已处理或不再待审核", WITHDRAWN: "批次已撤回", FAILED: "处理失败，请重试" } as Record<string, string>)[result.status] ?? result.status}</p>)}
+        </div>}
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           {/* Loading */}
           {isLoading && <TableSkeleton rows={6} />}
@@ -695,15 +726,23 @@ export default function AdminReviewPage() {
           {/* Pending list */}
           {!isLoading && !isError && tab === "pending" && pending.length > 0 && (
             <div>
+              <div className="flex flex-wrap items-center gap-4 border-b border-slate-200 bg-slate-50 px-6 py-3 text-sm">
+                <label className="flex items-center gap-2"><input type="checkbox" aria-label="全选当前待审核项（最多100项）" checked={visiblePending.length > 0 && visiblePending.every((item) => selectedIds.includes(item.id))} disabled={reviewBusy} onChange={(event) => selectIds(event.target.checked ? visiblePending.map((item) => item.id) : [])} />全选（最多 100 项）</label>
+                <button type="button" disabled={reviewBusy || !selectedIds.length} onClick={() => bulkMutation.mutate({ ids: [...selectedIds], batch, data })} className="rounded-lg bg-green-600 px-3 py-2 text-white disabled:opacity-50">{bulkMutation.isPending ? "批量审核中…" : `通过选中（${selectedIds.length}）`}</button>
+                <button type="button" disabled={reviewBusy} onClick={() => bulkMutation.mutate({ ids: visiblePending.map((item) => item.id), batch, data })} className="rounded-lg border border-green-300 px-3 py-2 text-green-700 disabled:opacity-50">一键通过当前{visiblePending.length}项</button>
+              </div>
               {pending.map((item) => (
                 <PendingRow
                   key={item.id}
                   item={item}
+                  selected={selectedIds.includes(item.id)}
+                  selectionDisabled={reviewBusy || (!selectedIds.includes(item.id) && selectedIds.length >= 100)}
+                  onSelect={() => selectIds(selectedIds.includes(item.id) ? selectedIds.filter((id) => id !== item.id) : [...selectedIds, item.id])}
                   onApprove={(id) => approveMutation.mutate(id)}
                   onReject={(id) => setRejectTargetId(id)}
                   isApproving={
-                    approveMutation.isPending &&
-                    approveMutation.variables === item.id
+                    bulkMutation.isPending || (approveMutation.isPending &&
+                    approveMutation.variables === item.id)
                   }
                   isRejecting={
                     rejectMutation.isPending &&

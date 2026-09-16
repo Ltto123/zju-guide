@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import { canonicalizeUrl, resolveSource } from "./website-sources";
+import { assertAllowedUrl } from './website-fetch';
 import {
   candidateUpdateSchema,
   ImportError,
@@ -32,12 +33,12 @@ async function mutableJob(tx: Prisma.TransactionClient, jobId: string) {
     throw new ImportError("任务已取消或撤回", 409);
   return job;
 }
-export async function createImportJob(userId: string, input: string) {
+export async function createImportJob(userId: string, input: string, entry?: { title: string; summary: string }) {
   let source;
   try {
     source = resolveSource(input);
   } catch {
-    throw new ImportError("请选择已支持的来源网站或输入对应网址");
+    throw new ImportError("请输入完整的公开 HTTP/HTTPS 网址，或选择预置网站名称");
   }
   return importTransaction(async (tx) => {
     await administrator(tx, userId);
@@ -51,7 +52,13 @@ export async function createImportJob(userId: string, input: string) {
       })) >= 20
     )
       throw new ImportError("每日最多创建 20 个扫描任务", 429);
-    return tx.websiteImportJob.create({ data: { sourceId: source.id, ownerId: userId } });
+    const siteData = entry ? candidateUpdateSchema.parse({ ...entry, resourceScope:'GENERAL',
+      type:'BLOG', applicableStage:'COURSE', courseCodes:[] }) : null;
+    const url = source.startUrl || source.baseUrl;
+    return tx.websiteImportJob.create({ data: { sourceId: source.id, ownerId: userId,
+      ...(siteData ? { status:'COMPLETED', candidates:{create:{...siteData,url,canonicalUrl:canonicalizeUrl(url),
+        matchReason:'管理员提供的网站入口；未自动核验站内内容',confirmed:false}} } : {}),
+    } });
   });
 }
 export async function getImportJob(id: string) {
@@ -103,6 +110,29 @@ type SubmissionResult = {
   resourceId?: string;
   error?: string;
 };
+export async function submitReadyCandidates(userId: string, jobId: string, includeUnmatchedAsGeneral = false) {
+  const prepared = await importTransaction(async tx => {
+    await administrator(tx, userId);
+    const job = await mutableJob(tx, jobId);
+    if (job.status !== 'COMPLETED') throw new ImportError('请等待扫描完成后再一键投稿',409);
+    const candidates = await tx.websiteImportCandidate.findMany({where:{jobId,status:{in:['READY','FAILED']}},orderBy:{createdAt:'asc'}});
+    const ids: string[]=[];
+    let skipped=0;
+    for (const c of candidates) {
+      const codes=Array.isArray(c.courseCodes)?c.courseCodes:[];
+      const fallback = includeUnmatchedAsGeneral && !c.confirmed && c.resourceScope !== 'GENERAL' && codes.length !== 1;
+      if (!(fallback || c.confirmed || c.resourceScope==='GENERAL' || codes.length===1)) {skipped++;continue;}
+      const parsed=candidateUpdateSchema.safeParse(fallback ? {...c,resourceScope:'GENERAL',courseCodes:[]} : c);
+      if (!parsed.success || ids.length>=30) {skipped++;continue;}
+      if (await tx.course.count({where:{code:{in:parsed.data.courseCodes}}})!==parsed.data.courseCodes.length) {skipped++;continue;}
+      await tx.websiteImportCandidate.update({where:{id:c.id},data:{...parsed.data,confirmed:true,status:'READY',error:null}});
+      ids.push(c.id);
+    }
+    return {ids,skipped};
+  });
+  if (!prepared.ids.length) return {results:[],skipped:prepared.skipped};
+  return {...await submitCandidates(userId,jobId,prepared.ids),skipped:prepared.skipped};
+}
 export async function submitCandidates(userId: string, jobId: string, ids: string[]) {
   const { candidateIds } = selectionSchema.parse({ candidateIds: ids });
   const job = await getImportJob(jobId);
@@ -130,8 +160,7 @@ export async function submitCandidates(userId: string, jobId: string, ids: strin
           if (!item.confirmed) throw new ImportError("请先保存并确认课程关联");
           const data = candidateUpdateSchema.parse(item);
           const source = resolveSource(batch.sourceId);
-          if (resolveSource(item.url).id !== source.id)
-            throw new ImportError("资源链接不属于来源网站");
+          assertAllowedUrl(item.url, source.baseUrl);
           const canonicalUrl = canonicalizeUrl(item.url);
           if (
             (await tx.course.count({ where: { code: { in: data.courseCodes } } })) !==

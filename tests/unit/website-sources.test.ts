@@ -23,18 +23,20 @@ const base = "https://zju-turing.github.io/TuringCourses/";
 const fixture = (name: string) =>
   readFileSync(new URL(`../fixtures/website-import/${name}.html`, import.meta.url), "utf8");
 describe("website source boundaries", () => {
-  it("resolves only known names and roots", () => {
+  it("resolves known names and custom public URLs", () => {
     expect(resolveSource("TuringCourses").id).toBe("turing");
     expect(resolveSource("BMS Database").id).toBe("bms");
     expect(resolveSource(base + "math_phys/").id).toBe("turing");
-    for (const value of [
-      "https://evil.test",
-      base.replace("github.io", "github.io.evil.test"),
-      "http://zju-turing.github.io/TuringCourses/",
-      base + "../private/",
-      base.replace("/TuringCourses/", "/TuringCoursesGrave/"),
-    ])
+    expect(resolveSource('https://ckc-agc.bowling233.top/').id).toBe('https://ckc-agc.bowling233.top/');
+    for (const value of ['unknown name','http://127.0.0.1/','https://localhost/', 'https://10.0.0.1/', 'ftp://example.org/', 'https://example.org:8080/', 'https://a:b@example.org/'])
       expect(() => resolveSource(value)).toThrow();
+  });
+  it('extracts custom same-site pages and ignores unrelated navigation', () => {
+    const site='https://ckc-agc.bowling233.top/';
+    expect(parseCourseLinks('<nav><a href="/math/">数学分析</a></nav><main><a href="/cs/">数据结构基础</a><a href="https://elsewhere.org/">外部广告</a><a href="/login">登录</a></main>', site, site)).toEqual([
+      {title:'数学分析',url:site+'math/'}, {title:'数据结构基础',url:site+'cs/'}
+    ]);
+    expect(()=>assertAllowedUrl('https://elsewhere.org/',site)).toThrow();
   });
   it("drops tracking and fragment but retains semantic parameters", () => {
     expect(canonicalizeUrl(base + "major/data_structure/?utm_source=x&year=2025#notes")).toBe(
@@ -167,7 +169,7 @@ describe("bounded scans and transport", () => {
   });
   it("rejects external redirects", async () => {
     replies([{ status: 404 }, { status: 302, headers: { location: "https://127.0.0.1/" } }]);
-    await expect(createSourceFetcher(base)(base)).rejects.toThrow("白名单");
+    await expect(createSourceFetcher(base)(base)).rejects.toThrow();
     expect(network.request).toHaveBeenCalledTimes(2);
   });
   it("caps streamed response bytes even without content length", async () => {
